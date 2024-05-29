@@ -9,8 +9,8 @@
 <br />
 <form method="post">
     <input hidden asp-for="ProductId" />
-    <div class="container">
-        <div class="card mb-12">
+    <div class="container bg-white">
+        <div class="card mb-12 shadow-sm">
             <div class="row g-0">
                 <div class="col-md-12">
                     <div class="card-header text-white" style="background:linear-gradient(to right, #6f444d 0%, #f6edb5 100%);">
@@ -54,7 +54,6 @@
                                     <i class="bi bi-cart-plus"></i> Add to Cart
                                 </button>
                             }
-
                         </p>
                     </div>
                 </div>
@@ -64,17 +63,17 @@
 </form>
 
 @section Scripts {
-<partial name="_ValidationScriptsPartial" />
-<script>
-    $(document).ready(function(){
-         $('#Count').change(function(){
-            var selection= $('#Count').val();
-            if(selection <= (@Model.Product.InStock))
-                $('#Add_to_cart').show();
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function(){
+             $('#Count').change(function(){
+                var selection = $('#Count').val();
+                if(selection <= (@Model.Product.InStock))
+                    $('#Add_to_cart').show();
 
-            if(selection <= 0 || selection > (@Model.Product.InStock))
-                $('#Add_to_cart').hide();
-        })
-    })
-</script>
+                if(selection <= 0 || selection > (@Model.Product.InStock))
+                    $('#Add_to_cart').hide();
+            });
+        });
+    </script>
 }
