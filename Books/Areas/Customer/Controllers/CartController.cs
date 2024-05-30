@@ -242,6 +242,11 @@ namespace Books.Areas.Customer.Controllers
             await _orderHeader.Entity.InsertAsync(ShoppingCartViewModel.OrderHeader);
             await _orderHeader.CompleteAsync();
 
+            // Update order status to Approved
+            ShoppingCartViewModel.OrderHeader.OrderStatus = Status.StatusType.Approved.ToString();
+            await _orderHeader.Entity.UpdateAsync(ShoppingCartViewModel.OrderHeader);
+            await _orderHeader.CompleteAsync();
+
             // Order Summary
             foreach (var item in ShoppingCartViewModel.ShoppingCarts)
             {
@@ -261,53 +266,10 @@ namespace Books.Areas.Customer.Controllers
             if (appUser.CompanyId.GetValueOrDefault() != 0)
                 return RedirectToAction("OrderConfirmed", "Cart", new { id = ShoppingCartViewModel.OrderHeader.Id });
 
-            // Stripe settings 
-            // Stripe settings 
-            var domain = _configuration["StripeSettings:Url"];
-            var successUrl = $"https://{domain}/customer/cart/OrderConfirmed?id={ShoppingCartViewModel.OrderHeader.Id}";
-            var cancelUrl = $"https://{domain}/customer/cart/index";
-
-            var options = new SessionCreateOptions
-            {
-                PaymentMethodTypes = new List<string> { "card" },
-                LineItems = new List<SessionLineItemOptions>(),
-                Mode = "payment",
-                SuccessUrl = successUrl,
-                CancelUrl = cancelUrl,
-            };
-
-
-            foreach (var item in ShoppingCartViewModel.ShoppingCarts)
-            {
-                var sessionLineItem = new SessionLineItemOptions
-                {
-                    PriceData = new SessionLineItemPriceDataOptions
-                    {
-                        UnitAmount = (long)(item.SetPriceHolderRabat(item.Product.Price * Rabat.DISCOUNT) * 100), //20.00 -> 2000
-                        Currency = "sek",
-                        ProductData = new SessionLineItemPriceDataProductDataOptions
-                        {
-                            Name = item.Product.Title,
-                        },
-                    },
-                    Quantity = item.Count
-                };
-                options.LineItems.Add(sessionLineItem);
-            }
-
-            var service = new SessionService();
-            Stripe.Checkout.Session session = service.Create(options);
-            session.ExpiresAt = DateTime.Now.AddSeconds(5);
-
-            // Update orderheader table.
-            ShoppingCartViewModel.OrderHeader.SessionId = session.Id;
-            ShoppingCartViewModel.OrderHeader.PaymentIntentId = session.PaymentIntentId;
-            await _orderHeader.Entity.UpdateAsync(ShoppingCartViewModel.OrderHeader);
-            await _orderHeader.CompleteAsync();
-
-            Response.Headers.Add("Location", session.Url);
-            return new StatusCodeResult(303);
+            return RedirectToAction("Index", "Cart");
         }
+
+
 
 
         public async Task<IActionResult> OrderConfirmed(int id)
